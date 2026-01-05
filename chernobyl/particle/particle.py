@@ -17,7 +17,8 @@ class Particle:
         self.velocity: V2D = Fixer.vector(velocity) / 20
         self.acceleration: V2D = Fixer.vector(acceleration, randomize=False)
         self.radius = 1
-        self.time_to_live = timedelta(seconds=10)
+        self.time_to_live = 1.0
+        self.life = 0
         self.created_at = datetime.now()
 
     @classmethod
@@ -32,7 +33,7 @@ class Particle:
         return self.position.dist(other.position) < self.radius + other.radius
 
     def end_of_life(self) -> bool:
-        return datetime.now() - self.created_at > self.time_to_live
+        return self.life >= self.time_to_live
 
     def escaped(self) -> bool:
         return not (
@@ -66,5 +67,6 @@ class Particle:
         other.velocity += impulse * m1 * normal
 
     def move(self, delta: float = 1.0) -> None:
-        self.velocity += self.acceleration
+        self.life += delta
+        self.velocity += self.acceleration * delta
         self.position += self.velocity * delta

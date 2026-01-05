@@ -7,8 +7,8 @@ from ..sound import Sound
 
 
 class Menu(Surface):
-    def __init__(self, screen: pygame.Surface, x: int, y: int) -> None:
-        super().__init__(screen, x, y)
+    def __init__(self, screen: pygame.Surface, x: int, y: int, dt: float) -> None:
+        super().__init__(screen, x, y, dt)
         self.background_color = 227, 227, 227
         self.foreground_color = 0, 0, 0
         self.surface.fill(self.background_color)

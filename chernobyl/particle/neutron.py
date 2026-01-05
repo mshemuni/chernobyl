@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Optional, Tuple, Self
 
 from .particle import Particle
@@ -14,6 +15,7 @@ class Neutron(Particle):
         super().__init__(surface, position, velocity=velocity, acceleration=acceleration)
         self.health_point: int = 1
         self.radius = 5
+        self.time_to_live = 0.75
         self.attraction_strength = 0.0
 
     @property

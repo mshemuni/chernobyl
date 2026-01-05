@@ -1,8 +1,8 @@
 from typing import Optional, List, Tuple
 
-from chernobyl import V2D
+import numpy as np
 
-FPS = 60
+from chernobyl import V2D
 
 
 class Fixer:
@@ -24,3 +24,10 @@ class Fixer:
             b = int((1 - i / (n - 1)) * 255)
             colors.append((r, g, b))
         return colors
+
+    @classmethod
+    def fps(cls, value: Optional[int] = None) -> float:
+        if value is None:
+            return 60
+
+        return value

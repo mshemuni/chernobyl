@@ -94,7 +94,7 @@ class V2D:
 
     # Random vector
     @classmethod
-    def random(cls, magnitude: float = 1, angle_range: float = 360.0) -> "V2D":
+    def random(cls, magnitude: float = 10, angle_range: float = 360.0) -> "V2D":
         """
         Generate a random 2D vector with a given magnitude and optional random angle range.
 

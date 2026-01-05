@@ -13,11 +13,12 @@ class Atom(Particle):
     def __init__(self,
                  surface: Surface,
                  position: V2D,
+                 health_point: int,
                  velocity: Optional[V2D] = None,
                  acceleration: Optional[V2D] = None) -> None:
         super().__init__(surface, position, velocity=velocity, acceleration=acceleration)
-        self._health_point: int = 1
-        self.initial_health_point = self.health_point
+        self._health_point: int = health_point
+        self.initial_health_point = health_point
         self.radius = np.pi * self.health_point ** 2 * 5
         self.decay_probability = 0.1
         self.attraction_strength = 0.0
@@ -30,7 +31,8 @@ class Atom(Particle):
 
     @health_point.setter
     def health_point(self, value):
-        self.initial_health_point = value
+        if value < 0:
+            value = 0
         self._health_point = value
 
     @property

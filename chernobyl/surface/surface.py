@@ -6,10 +6,11 @@ from ..v2d import V2D
 
 
 class Surface:
-    def __init__(self, screen: pygame.Surface, x: int, y: int) -> None:
+    def __init__(self, screen: pygame.Surface, x: int, y: int, dt: float) -> None:
         self.screen = screen
         self.x = x
         self.y = y
+        self.dt = dt
 
         self.surface = pygame.Surface((self.screen.get_width(), self.screen.get_height()))
         self.background_color = 62, 62, 62
