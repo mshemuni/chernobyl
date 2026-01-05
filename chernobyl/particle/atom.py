@@ -1,0 +1,50 @@
+from random import random
+from typing import Optional, Tuple
+
+import numpy as np
+
+from .particle import Particle
+from .. import V2D
+from ..surface.surface import Surface
+from ..utils import Fixer
+
+
+class Atom(Particle):
+    def __init__(self,
+                 surface: Surface,
+                 position: V2D,
+                 velocity: Optional[V2D] = None,
+                 acceleration: Optional[V2D] = None) -> None:
+        super().__init__(surface, position, velocity=velocity, acceleration=acceleration)
+        self._health_point: int = 1
+        self.initial_health_point = self.health_point
+        self.radius = np.pi * self.health_point ** 2 * 5
+        self.decay_probability = 0.1
+        self.attraction_strength = 0.0
+        self.colors = Fixer.colors()
+        self.absorption_ratio = 0.5
+
+    @property
+    def health_point(self) -> int:
+        return self._health_point
+
+    @health_point.setter
+    def health_point(self, value):
+        self.initial_health_point = value
+        self._health_point = value
+
+    @property
+    def color(self) -> Tuple[int, int, int]:
+        return self.colors[self.health_point]
+
+    def decay(self) -> bool:
+        return random() < self.decay_probability
+
+    def decrease_health(self) -> None:
+        self.health_point -= 1
+
+    def is_dead(self) -> bool:
+        return self.health_point == 0
+
+    def absorbed(self) -> bool:
+        return self.absorption_ratio > random()
