@@ -3,7 +3,7 @@ from random import random
 import numpy as np
 import pygame
 
-from .. import V2D
+from .. import V2D, Sound
 from ..particle import Atom, Neutron, Rod
 from ..particle.particle import Particle
 from ..surface.surface import Surface
@@ -16,6 +16,12 @@ class Reactor(Surface):
         self.foreground_color = 255, 255, 255
         self.surface = pygame.Surface((self.screen.get_width(), self.screen.get_height() - 100))
         self.surface.fill(self.background_color)
+
+        self.background_sound = Sound("statics/sounds/silent-room.mp3")
+        self.background_sound.play(loop=True)
+
+        self.background_sound_elect = Sound("statics/sounds/electricity.mp3", 0.2)
+        self.background_sound_elect.play(loop=True)
 
         self.current_score = 0
 
@@ -42,6 +48,13 @@ class Reactor(Surface):
             Rod(self.surface, int(x), self.dt)
             for x in np.linspace(100, self.surface.get_width() - 100, 10)
         ]
+
+    def __del__(self):
+        try:
+            self.background_sound.stop()
+            self.background_sound_elect.stop()
+        except:
+            pass
 
     def add_atom(self, atom: Atom) -> None:
         self.atoms.append(atom)
@@ -147,6 +160,7 @@ class Reactor(Surface):
 
         self.total_power += power
         if power > 0:
+
             self.generated_power.append(int(power))
 
         self.spawn_atom()

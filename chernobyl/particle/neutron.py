@@ -9,7 +9,7 @@ from ..surface.surface import Surface
 
 def play_geiger_async():
     sleep(0.25 + random() / 2)
-    Sound("statics/sound/geiger.mp3", 0.1 + random() * 0.9).play()
+    Sound("statics/sounds/geiger.mp3", 0.1 + random() * 0.3).play()
 
 class Neutron(Particle):
     def __init__(self,

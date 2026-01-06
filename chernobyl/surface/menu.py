@@ -14,10 +14,19 @@ class Menu(Surface):
         self.surface.fill(self.background_color)
         self.hovered_item = None
 
+        self.background_sound = Sound("statics/sounds/spooky.mp3")
+        self.background_sound.play(loop=True)
+
         self.sounds = {
-            "click": Sound("statics/sound/click.mp3"),
-            "hover": Sound("statics/sound/hover.mp3"),
+            "click": Sound("statics/sounds/click.mp3"),
+            "hover": Sound("statics/sounds/hover.mp3"),
         }
+
+    def __del__(self):
+        try:
+            self.background_sound.stop()
+        except:
+            pass
 
     def hover_handler(self):
         mouse_pos = pygame.mouse.get_pos()
