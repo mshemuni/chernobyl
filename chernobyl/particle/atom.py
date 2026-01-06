@@ -39,8 +39,9 @@ class Atom(Particle):
     def color(self) -> Tuple[int, int, int]:
         return self.colors[self.health_point]
 
-    def decay(self) -> bool:
-        return random() < self.decay_probability
+    def decay(self, dt: float) -> bool:
+        p = 1.0 - (1.0 - self.decay_probability) ** dt
+        return random() < p
 
     def decrease_health(self) -> None:
         self.health_point -= 1

@@ -1,10 +1,15 @@
-from datetime import timedelta
+import threading
+from random import random
+from time import sleep
 from typing import Optional, Tuple, Self
 
 from .particle import Particle
-from .. import V2D
+from .. import V2D, Sound
 from ..surface.surface import Surface
 
+def play_geiger_async():
+    sleep(0.25 + random() / 2)
+    Sound("statics/sound/geiger.mp3", 0.1 + random() * 0.9).play()
 
 class Neutron(Particle):
     def __init__(self,
@@ -15,8 +20,14 @@ class Neutron(Particle):
         super().__init__(surface, position, velocity=velocity, acceleration=acceleration)
         self.health_point: int = 1
         self.radius = 5
-        self.time_to_live = 0.75
+        self.time_to_live = 1
         self.attraction_strength = 0.0
+
+        threading.Thread(
+            target=play_geiger_async,
+            daemon=True
+        ).start()
+
 
     @property
     def color(self) -> Tuple[int, int, int]:

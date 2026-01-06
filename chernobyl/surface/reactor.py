@@ -1,5 +1,4 @@
 from random import random
-from time import sleep
 
 import numpy as np
 import pygame
@@ -28,13 +27,13 @@ class Reactor(Surface):
 
         self.neutron_velocity_mag = 250
 
-        self.atom_capacity = 100
+        self.atom_capacity = 200
         self.atom_velocity_mag = 100
         self.atom_spawn_probability = 0.5
-        self.atom_decay_probability = 0.0
+        self.atom_decay_probability = 0.05
         self.atom_attraction_strength = 0.0
         self.atom_absorption_ratio = 0.25
-        self.atom_maximum_health = 5
+        self.atom_maximum_health = 4
 
         self.generated_power = []
         self.atoms = []
@@ -107,7 +106,7 @@ class Reactor(Surface):
                 continue
 
             atom.move(self.dt)
-            if atom.decay():
+            if atom.decay(self.dt):
                 power += atom.health_point / 2
                 for _ in range(atom.initial_health_point):
                     neutron = Neutron(self.surface, atom.position)
@@ -148,7 +147,7 @@ class Reactor(Surface):
 
         self.total_power += power
         if power > 0:
-            self.generated_power.append(power)
+            self.generated_power.append(int(power))
 
         self.spawn_atom()
 
