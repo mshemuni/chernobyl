@@ -19,7 +19,7 @@ class Atom(Particle):
         super().__init__(surface, position, velocity=velocity, acceleration=acceleration)
         self._health_point: int = health_point
         self.initial_health_point = health_point
-        self.radius = np.pi * self.health_point ** 2 * 5
+        self.radius = 20
         self.decay_probability = 0.1
         self.attraction_strength = 0.0
         self.colors = Fixer.colors()

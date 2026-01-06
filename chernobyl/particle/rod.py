@@ -1,23 +1,25 @@
 from random import random
 
 from .particle import Particle
-from .. import V2D
+from ..v2d import V2D
 from ..surface.surface import Surface
 
 
 class Rod:
-    def __init__(self, surface: Surface, x: int):
+    def __init__(self, surface: Surface, x: int, dt: float):
         self.surface = surface
         self.x = x
+        self.y = 0
         self.insertion = 0.0
         self.insertion_rate = 0.1
-        self.color = 255, 255, 255
+        self.color = 255, 0, 255
         self.width = 4
-        self.absorption_ratio = 0.0
+        self.absorption_ratio = 0.5
+        self.dt = dt
 
     @property
     def current_lowness(self) -> float:
-        return self.insertion * self.surface.surface.get_height()
+        return self.insertion * self.surface.get_height()
 
     def start(self):
         return V2D(self.x, 0)

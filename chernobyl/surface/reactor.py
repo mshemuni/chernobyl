@@ -1,10 +1,11 @@
 from random import random
+from time import sleep
 
 import numpy as np
 import pygame
 
 from .. import V2D
-from ..particle import Atom, Neutron
+from ..particle import Atom, Neutron, Rod
 from ..particle.particle import Particle
 from ..surface.surface import Surface
 
@@ -25,19 +26,23 @@ class Reactor(Surface):
 
         self.time_left = 20
 
-        self.neutron_velocity_mag = 500
+        self.neutron_velocity_mag = 250
 
-        self.atom_capacity = 150
+        self.atom_capacity = 100
         self.atom_velocity_mag = 100
-        self.atom_spawn_probability = 0.75
+        self.atom_spawn_probability = 0.5
         self.atom_decay_probability = 0.0
         self.atom_attraction_strength = 0.0
         self.atom_absorption_ratio = 0.25
-        self.atom_maximum_health = 1
+        self.atom_maximum_health = 5
 
         self.generated_power = []
         self.atoms = []
         self.neutrons = []
+        self.rods = [
+            Rod(self.surface, int(x), self.dt)
+            for x in np.linspace(100, self.surface.get_width() - 100, 10)
+        ]
 
     def add_atom(self, atom: Atom) -> None:
         self.atoms.append(atom)
@@ -75,7 +80,7 @@ class Reactor(Surface):
         x = 10 + random() * (self.surface.get_width() - 10)
         y = 10 + random() * (self.surface.get_height() - 10)
 
-        atom = Atom(self.surface, V2D(x, y), self.calculate_atom_health())
+        atom = Atom(self.surface, V2D(x, y), self.atom_maximum_health)
 
         atom.decay_probability = self.atom_decay_probability
         atom.attraction_strength = self.atom_attraction_strength
@@ -86,6 +91,14 @@ class Reactor(Surface):
     def draw(self):
         power = 0
         self.surface.fill(self.background_color)
+        for rod in self.rods:
+            self.line(rod.start(), rod.end(), width=10)
+            for neutron_index in range(len(self.neutrons) - 1, -1, -1):
+                neutron = self.neutrons[neutron_index]
+                if rod.collided(neutron):
+                    if random() > rod.absorption_ratio:
+                        del self.neutrons[neutron_index]
+
         for atom_index in range(len(self.atoms) - 1, -1, -1):
             atom = self.atoms[atom_index]
 
@@ -96,7 +109,7 @@ class Reactor(Surface):
             atom.move(self.dt)
             if atom.decay():
                 power += atom.health_point / 2
-                for _ in range(((atom.initial_health_point + 1) ** 2) // 2):
+                for _ in range(atom.initial_health_point):
                     neutron = Neutron(self.surface, atom.position)
                     neutron.velocity = V2D.random(magnitude=self.neutron_velocity_mag)
                     self.add(neutron)
@@ -115,10 +128,9 @@ class Reactor(Surface):
                 atom = self.atoms[atom_index]
                 if atom.collided(neutron) and random() < atom.absorption_ratio:
 
-                    atom.health_point -= neutron.health_point + np.log(neutron.velocity.mag()) // 1
+                    atom.health_point -= int(neutron.health_point + np.log(neutron.velocity.mag()) // 1)
                     if atom.is_dead():
-
-                        for _ in range((atom.initial_health_point + 1) ** 2):
+                        for _ in range(atom.initial_health_point):
                             neutron = Neutron(self.surface, atom.position)
                             neutron.velocity = V2D.random(magnitude=self.neutron_velocity_mag)
                             self.add(neutron)
@@ -148,9 +160,19 @@ class Reactor(Surface):
                 atom = self.atoms[atom_index]
                 x, y = mouse
                 if atom.position.dist(V2D(x, y - 100)) < atom.radius:
-                    for _ in range((atom.initial_health_point + 1) ** 2):
+                    for _ in range(atom.initial_health_point):
                         neutron = Neutron(self.surface, atom.position)
                         neutron.velocity = V2D.random(magnitude=self.neutron_velocity_mag)
                         self.add(neutron)
                     del self.atoms[atom_index]
                     break
+        elif event.type == pygame.MOUSEWHEEL:
+            if event.y > 0:
+                for rod in self.rods:
+                    rod.lift()
+
+            elif event.y < 0:
+                for rod in self.rods:
+                    rod.lower()
+
+
