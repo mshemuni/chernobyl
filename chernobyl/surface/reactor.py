@@ -16,6 +16,7 @@ class Reactor(Surface):
         self.foreground_color = 255, 255, 255
         self.surface = pygame.Surface((self.screen.get_width(), self.screen.get_height() - 100))
         self.surface.fill(self.background_color)
+        self.paused = False
 
         self.background_sound = Sound("statics/sounds/silent-room.mp3")
         self.background_sound.play(loop=True)
@@ -101,6 +102,9 @@ class Reactor(Surface):
         self.add(atom)
 
     def draw(self):
+        if self.paused:
+            return
+        self.time_left -= self.dt
         power = 0
         self.surface.fill(self.background_color)
         for rod in self.rods:

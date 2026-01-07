@@ -34,6 +34,9 @@ class Window:
         self.reactor_surface = None
         self.board_surface = None
 
+        self.paused_reactor = None
+        self.paused_board = None
+
         self.running = True
 
     def stop(self):
@@ -54,17 +57,33 @@ class Window:
             if event.type == pygame.QUIT:
                 self.running = False
 
-            for surface in [self.menu_surface, self.reactor_surface, self.board_surface]:
+            for surface in [self.reactor_surface, self.board_surface, self.menu_surface]:
                 if surface is not None:
                     action = surface.event_handler(event)
 
-                    if action == "New Game":
+                    if action == "Menu":
+                        self.reactor_surface.paused = True
+                        self.paused_reactor = self.reactor_surface
+                        self.paused_board = self.board_surface
+                        self.reactor_surface = None
+                        self.board_surface = None
+                        self.menu_surface = Menu(self.screen, 0, 0, self.dt, paused=True)
+
+                    elif action == "Continue":
+                        self.reactor_surface = self.paused_reactor
+                        self.board_surface = self.paused_board
+                        self.paused_reactor = None
+                        self.paused_board = None
+                        self.reactor_surface.paused = False
+
+                    elif action == "New Game":
                         self.menu_surface = None
                         self.reactor_surface = Reactor(self.screen, 0, 100, self.dt)
                         self.board_surface = Board(self.screen, 0, 0, self.dt)
 
                     elif action == "Options":
                         print("Options")
+
                     elif action == "Exit":
                         self.running = False
 

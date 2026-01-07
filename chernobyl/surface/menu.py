@@ -7,11 +7,12 @@ from ..sound import Sound
 
 
 class Menu(Surface):
-    def __init__(self, screen: pygame.Surface, x: int, y: int, dt: float) -> None:
+    def __init__(self, screen: pygame.Surface, x: int, y: int, dt: float, paused: bool = False) -> None:
         super().__init__(screen, x, y, dt)
         self.background_color = 227, 227, 227
         self.foreground_color = 0, 0, 0
         self.surface.fill(self.background_color)
+        self.paused = paused
         self.hovered_item = None
 
         self.background_sound = Sound("statics/sounds/spooky.mp3")
@@ -72,6 +73,10 @@ class Menu(Surface):
             )
             self.surface.blit(text, rect)
             items[name] = rect
+
+
+        if self.paused:
+            add_item("Continue", 2)
 
         add_item("New Game", 1.80)
         add_item("Options", 1.625)

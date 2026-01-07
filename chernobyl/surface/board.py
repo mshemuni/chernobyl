@@ -1,11 +1,8 @@
-from typing import Dict
-
 import numpy as np
 import pygame
 
 from .surface import Surface
 from .. import V2D
-from ..sound import Sound
 
 
 class Board(Surface):
@@ -21,6 +18,8 @@ class Board(Surface):
         self.power = []
         self.power_capacity = 0
 
+        self.menu_rect = None
+
     import numpy as np
 
     def downsample(self, values: list[float], target: int = 100) -> np.ndarray:
@@ -29,7 +28,6 @@ class Board(Surface):
 
         arr = np.asarray(values, dtype=float)
 
-        # Compute bin edges
         indices = np.linspace(0, len(arr), target + 1, dtype=int)
 
         return np.array([
@@ -79,10 +77,17 @@ class Board(Surface):
             maximum_power = "NaN"
         self.text(f"Peak power: {maximum_power}/{self.power_capacity} TW", V2D(0, 32))
 
+    def menu_button(self):
+        font_each_menu = pygame.font.SysFont(None, 32)
+        text = font_each_menu.render("Menu", True, self.foreground_color)
+        self.menu_rect = text.get_rect(
+            center=(self.surface.get_width() // 2, 64)
+        )
+        self.surface.blit(text, self.menu_rect)
 
     def show_time_left(self):
         font_each_menu = pygame.font.SysFont(None, 64)
-        text = font_each_menu.render(str(self.time_left), True, self.foreground_color)
+        text = font_each_menu.render(str(int(self.time_left)), True, self.foreground_color)
         rect = text.get_rect(
             center=(self.surface.get_width() // 2, 32)
         )
@@ -94,3 +99,13 @@ class Board(Surface):
         self.show_time_left()
         self.max_power()
         self.draw_power_graph()
+        self.menu_button()
+
+    def event_handler(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            mouse_pos = event.pos
+            if self.menu_rect is not None:
+                if self.menu_rect.collidepoint(mouse_pos):
+                    return "Menu"
+            # if rect.collidepoint(mouse_pos):
+            #     return name
