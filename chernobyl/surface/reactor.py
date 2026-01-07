@@ -30,17 +30,21 @@ class Reactor(Surface):
         self.power_capacity = 4
         self.total_power = 0
 
-        self.time_left = 20
+        self.time_left = 10
+        self.critical_hit_probability = 0.5
 
         self.neutron_velocity_mag = 250
+        self.neutron_release = 2.5
 
         self.atom_capacity = 200
         self.atom_velocity_mag = 100
         self.atom_spawn_probability = 0.5
-        self.atom_decay_probability = 0.05
+        self.atom_decay_probability = 0.01
         self.atom_attraction_strength = 0.0
         self.atom_absorption_ratio = 0.25
         self.atom_maximum_health = 4
+
+        self.power_surge = False
 
         self.generated_power = []
         self.atoms = []
@@ -122,49 +126,60 @@ class Reactor(Surface):
                 del self.atoms[atom_index]
                 continue
 
-            atom.move(self.dt)
-            if atom.decay(self.dt):
-                power += atom.health_point / 2
-                for _ in range(atom.initial_health_point):
+            if atom.is_dead():
+                for _ in range(int(atom.initial_health_point * self.neutron_release)):
                     neutron = Neutron(self.surface, atom.position)
                     neutron.velocity = V2D.random(magnitude=self.neutron_velocity_mag)
                     self.add(neutron)
+
+                power += atom.initial_health_point
                 del self.atoms[atom_index]
+                continue
+
+            if atom.decay(self.dt):
+                power += atom.health_point / 2
+                for _ in range(int(atom.initial_health_point * self.neutron_release) // 2):
+                    neutron = Neutron(self.surface, atom.position)
+                    neutron.velocity = V2D.random(magnitude=self.neutron_velocity_mag)
+                    self.add(neutron)
+
+                power += atom.initial_health_point // 2
+                del self.atoms[atom_index]
+                continue
+
+            atom.move(self.dt)
             self.circle(atom.position, atom.radius, atom.color)
 
         for neutron_index in range(len(self.neutrons) - 1, -1, -1):
+            skip = False
             neutron = self.neutrons[neutron_index]
 
             if neutron.escaped() or neutron.end_of_life():
                 del self.neutrons[neutron_index]
                 continue
 
-            neutron.move(self.dt)
             for atom_index in range(len(self.atoms) - 1, -1, -1):
                 atom = self.atoms[atom_index]
-                if atom.collided(neutron) and random() < atom.absorption_ratio:
+                if atom.collided(neutron):
+                    if atom.absorbed(self.dt):
+                        critical_multiplier = 1 if self.critical_hit_probability > random() else 2
+                        atom.health_point -= int(
+                            neutron.health_point + np.log10(neutron.velocity.mag() // 3)) * critical_multiplier
 
-                    atom.health_point -= int(neutron.health_point + np.log(neutron.velocity.mag()) // 1)
-                    if atom.is_dead():
-                        for _ in range(atom.initial_health_point):
-                            neutron = Neutron(self.surface, atom.position)
-                            neutron.velocity = V2D.random(magnitude=self.neutron_velocity_mag)
-                            self.add(neutron)
-
-                        power += atom.initial_health_point
-                        del self.atoms[atom_index]
-                    else:
-                        atom.bounce(neutron)
+                    atom.bounce(neutron)
                     del self.neutrons[neutron_index]
+                    skip = True
+                    break
+            if skip:
+                continue
 
+            neutron.move(self.dt)
             self.circle(neutron.position, neutron.radius, neutron.color)
 
-        if power > self.power_capacity:
-            print("Boom")
+        self.power_surge = power > self.power_capacity
 
         self.total_power += power
         if power > 0:
-
             self.generated_power.append(int(power))
 
         self.spawn_atom()
@@ -177,7 +192,7 @@ class Reactor(Surface):
                 atom = self.atoms[atom_index]
                 x, y = mouse
                 if atom.position.dist(V2D(x, y - 100)) < atom.radius:
-                    for _ in range(atom.initial_health_point):
+                    for _ in range(int(atom.initial_health_point * self.neutron_release)):
                         neutron = Neutron(self.surface, atom.position)
                         neutron.velocity = V2D.random(magnitude=self.neutron_velocity_mag)
                         self.add(neutron)
@@ -191,5 +206,3 @@ class Reactor(Surface):
             elif event.y < 0:
                 for rod in self.rods:
                     rod.lower()
-
-

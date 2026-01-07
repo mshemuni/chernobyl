@@ -19,6 +19,7 @@ class Board(Surface):
         self.power_capacity = 0
 
         self.menu_rect = None
+        self.timesup = False
 
     import numpy as np
 
@@ -92,6 +93,7 @@ class Board(Surface):
             center=(self.surface.get_width() // 2, 32)
         )
         self.surface.blit(text, rect)
+        self.timesup = self.time_left < 0
 
     def draw(self):
         self.surface.fill(self.background_color)

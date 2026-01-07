@@ -22,7 +22,7 @@ class Atom(Particle):
         self.radius = 20
         self.decay_probability = 0.1
         self.attraction_strength = 0.0
-        self.colors = Fixer.colors()
+        self.colors = Fixer.colors(n=self.health_point)
         self.absorption_ratio = 0.5
 
     @property
@@ -37,7 +37,7 @@ class Atom(Particle):
 
     @property
     def color(self) -> Tuple[int, int, int]:
-        return self.colors[self.health_point]
+        return self.colors[self.health_point - 1]
 
     def decay(self, dt: float) -> bool:
         p = 1.0 - (1.0 - self.decay_probability) ** dt
@@ -49,5 +49,6 @@ class Atom(Particle):
     def is_dead(self) -> bool:
         return self.health_point == 0
 
-    def absorbed(self) -> bool:
-        return self.absorption_ratio > random()
+    def absorbed(self, dt: float) -> bool:
+        p = 1.0 - (1.0 - self.absorption_ratio) ** dt
+        return random() < p

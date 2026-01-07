@@ -1,0 +1,90 @@
+from typing import Dict
+
+import pygame
+
+from .surface import Surface
+from ..sound import Sound
+
+
+class GameOver(Surface):
+    def __init__(self, screen: pygame.Surface, x: int, y: int, dt: float, paused: bool = False) -> None:
+        super().__init__(screen, x, y, dt)
+        self.background_color = 227, 227, 227
+        self.foreground_color = 0, 0, 0
+        self.surface.fill(self.background_color)
+        self.paused = paused
+        self.hovered_item = None
+
+        self.background_sound = Sound("statics/sounds/spooky.mp3")
+        self.background_sound.play(loop=True)
+
+        self.sounds = {
+            "click": Sound("statics/sounds/click.mp3"),
+            "hover": Sound("statics/sounds/hover.mp3"),
+        }
+
+    def __del__(self):
+        try:
+            self.background_sound.stop()
+        except:
+            pass
+
+    def hover_handler(self):
+        mouse_pos = pygame.mouse.get_pos()
+        current_hover = None
+
+        for name, rect in self.items().items():
+            if rect.collidepoint(mouse_pos):
+                current_hover = name
+
+                if self.hovered_item != name:
+                    self.sounds["hover"].play()
+
+                break
+
+        self.hovered_item = current_hover
+
+    def event_handler(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            mouse_pos = event.pos
+
+            for name, rect in self.items().items():
+                if rect.collidepoint(mouse_pos):
+                    self.sounds["click"].play()
+                    return name
+
+
+    def items(self) -> Dict[str, pygame.Rect]:
+        items = {}
+
+        font_title = pygame.font.SysFont(None, 128)
+        title_text = font_title.render("Session Over", True, self.foreground_color)
+        title_rect = title_text.get_rect(
+            center=(self.surface.get_width() // 2, self.surface.get_height() // 10)
+        )
+        self.surface.blit(title_text, title_rect)
+
+        font_msg = pygame.font.SysFont(None, 32)
+        msg_text = font_msg.render("You earned half of what you generated last session", True, self.foreground_color)
+        msg_rect = msg_text.get_rect(
+            center=(self.surface.get_width() // 2, self.surface.get_height() // 5)
+        )
+
+        self.surface.blit(msg_text, msg_rect)
+
+        font_each_menu = pygame.font.SysFont(None, 64)
+
+        def add_item(name, y_ratio):
+            text = font_each_menu.render(name, True, self.foreground_color)
+            rect = text.get_rect(
+                center=(self.surface.get_width() // 2, int(self.surface.get_height() / y_ratio))
+            )
+            self.surface.blit(text, rect)
+            items[name] = rect
+
+
+
+        add_item("New Session", 2)
+        add_item("Upgrade", 1.80)
+
+        return items

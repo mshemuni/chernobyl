@@ -4,7 +4,10 @@ import pygame
 
 from .surface import Menu
 from .surface.board import Board
+from .surface.game_over import GameOver
 from .surface.reactor import Reactor
+from .surface.time_over import TimeOver
+from .surface.upgrader import Upgrader
 from .utils import Fixer
 
 
@@ -30,12 +33,16 @@ class Window:
 
         self.hovered_item = None
 
+
         self.menu_surface = Menu(self.screen, 0, 0, self.dt)
+        self.game_over_surface = None
+        self.upgrade_surface = None
         self.reactor_surface = None
         self.board_surface = None
 
         self.paused_reactor = None
         self.paused_board = None
+        self.available_power = 0
 
         self.running = True
 
@@ -43,7 +50,7 @@ class Window:
         self.running = False
 
     def draw(self):
-        for surface in [self.menu_surface, self.reactor_surface, self.board_surface]:
+        for surface in [self.menu_surface, self.reactor_surface, self.board_surface, self.game_over_surface]:
             if surface is not None:
                 self.screen.blit(surface.surface, (surface.x, surface.y))
 
@@ -51,13 +58,26 @@ class Window:
             self.board_surface.power = self.reactor_surface.generated_power
             self.board_surface.time_left = self.reactor_surface.time_left
             self.board_surface.power_capacity = self.reactor_surface.power_capacity
+            if self.reactor_surface.power_surge:
+                self.available_power += int(sum(self.reactor_surface.generated_power)) // 2
+                self.reactor_surface = None
+                self.board_surface = None
+                self.game_over_surface = GameOver(self.screen, 0, 0, self.dt)
+
+            elif self.board_surface.timesup:
+                self.available_power += int(sum(self.reactor_surface.generated_power))
+                self.reactor_surface = None
+                self.board_surface = None
+                self.game_over_surface = TimeOver(self.screen, 0, 0, self.dt)
+
+
 
     def event_handler(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
 
-            for surface in [self.reactor_surface, self.board_surface, self.menu_surface]:
+            for surface in [self.reactor_surface, self.board_surface, self.menu_surface, self.game_over_surface]:
                 if surface is not None:
                     action = surface.event_handler(event)
 
@@ -67,6 +87,8 @@ class Window:
                         self.paused_board = self.board_surface
                         self.reactor_surface = None
                         self.board_surface = None
+                        self.game_over_surface = None
+                        self.upgrade_surface = None
                         self.menu_surface = Menu(self.screen, 0, 0, self.dt, paused=True)
 
                     elif action == "Continue":
@@ -74,12 +96,39 @@ class Window:
                         self.board_surface = self.paused_board
                         self.paused_reactor = None
                         self.paused_board = None
+                        self.game_over_surface = None
+                        self.upgrade_surface = None
+                        self.menu_surface = None
                         self.reactor_surface.paused = False
 
                     elif action == "New Game":
+                        self.game_over_surface = None
                         self.menu_surface = None
+                        self.upgrade_surface = None
                         self.reactor_surface = Reactor(self.screen, 0, 100, self.dt)
                         self.board_surface = Board(self.screen, 0, 0, self.dt)
+                        self.available_power= 0
+
+                    elif action == "Session Over":
+                        self.menu_surface = None
+                        self.upgrade_surface = None
+                        self.reactor_surface = Reactor(self.screen, 0, 100, self.dt)
+                        self.board_surface = Board(self.screen, 0, 0, self.dt)
+
+                    elif action == "New Session":
+                        self.game_over_surface = None
+                        self.menu_surface = None
+                        self.upgrade_surface = None
+                        self.reactor_surface = Reactor(self.screen, 0, 100, self.dt)
+                        self.board_surface = Board(self.screen, 0, 0, self.dt)
+                        self.reactor_surface.generated_power.extend([1] * self.available_power)
+
+                    elif action == "Upgrade":
+                        self.game_over_surface = Upgrader(self.screen, 0, 0, self.dt)
+                        self.menu_surface = None
+                        self.upgrade_surface = None
+                        self.reactor_surface = None
+                        self.board_surface = None
 
                     elif action == "Options":
                         print("Options")
@@ -91,7 +140,7 @@ class Window:
         while self.running:
             self.event_handler()
 
-            for surface in [self.menu_surface, self.reactor_surface, self.board_surface]:
+            for surface in [self.menu_surface, self.reactor_surface, self.board_surface, self.game_over_surface]:
                 if surface is not None:
                     surface.hover_handler()
                     surface.draw()
